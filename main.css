@@ -1,0 +1,57 @@
+body {
+	background-color: black;
+	font-family: Arial,Helvetica,sans-serif;
+	font-size: 14px;
+}
+h1 {
+	display: inline;
+	text-transform: lowercase;
+	white-space: nowrap;
+	margin: 0;
+}
+div.bici {
+	height: 100px;
+	border: 1px solid;
+	border-radius: 10px;
+	height: 100px;
+	margin-bottom: 10px;
+	padding: 10px 152px 10px 10px;
+	background-color: white;
+	position: relative;
+}
+p {
+	margin: 0;
+	height: 64px;
+	overflow-y: auto;
+}
+h1 a {
+	text-decoration: none;
+}
+span.precio:after {
+	content: " €";
+}
+div.r {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	text-align: right;
+	margin: 5px;
+}
+div.r img {
+	max-height: 100px;
+	max-width: 133px;
+}
+div.r span.fecha {
+	background-color: white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+.fuente {
+	display:none;
+}
+div.old {
+	display:none;
+}
