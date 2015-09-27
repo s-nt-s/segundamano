@@ -9,4 +9,4 @@ if [ $? -ne 0 ]; then
 fi
 
 cat head.html body.html foot.html > index.html
-wput -A -u index.html main.css bici.py ftp://back.host22.com/public_html/bicis/
+wput -nc -u index.html ftp://back.host22.com/public_html/bicis/

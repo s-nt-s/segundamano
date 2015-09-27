@@ -99,7 +99,6 @@ def ya(url):
 def get(url):
 	try:
 		headers = {
-			#'User-Agent': 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16'
 			'Accept-Encoding': None
 		}
 		response = requests.get(url, headers=headers)
@@ -158,7 +157,7 @@ def getM(url,soup):
 			if len(i)>0:
 				b['img']=i[0].get('src').strip()
 			else:
-				sp=get(u).head.find("link", rel='image_src') #select("link[rel='image_src']")
+				sp=get(u).head.find("link", rel='image_src')
 				if sp is not None:
 					b['img']=sp['href']
 			b['des']=clean(ad.select('div.tx'))
@@ -172,7 +171,7 @@ def getS(url,soup):
 		u="http://www.segundamano.es"+urlparse.urlparse(a.attrs.get('href')).path
 		t=a.get_text().strip()
 
-		if not no.match(t) and not ya(u): # and len(ad.select('div.user_type_label'))==0:
+		if not no.match(t) and not ya(u):
 			b=bici()
 			b['fuente']=url
 			b['precio']=ad.select('a.subjectPrice')[0].get_text().strip()
@@ -207,6 +206,8 @@ def run():
 	  return x['fecha'] or mindate
 
 	_bcs=sorted(bcs, key=ordenar, reverse=True)
+	
+	print "<div class='cuerpo'>"
 	for b in _bcs:
 		if not no.match(b['des']) and not b['des'].lower().startswith("compro "):
 			p=nb.sub("\\1",b['precio'])
@@ -226,10 +227,19 @@ def run():
 				print "<img src='"+b['img']+"'/>"
 			print "</div>"
 			print "</div>"
+
+	print "</div>"
+	print "<div class='pie'>"
+	print u"<span class='a'>Última actualización: " + ahora.strftime("%d/%m/%y %H:%M")+"</span>"
+	print u"<span class='c'><a href='https://github.com/santos82/bicis'>código en github.com</a></span>"
+	
+	
 	print "<div class='fuente'>"
 	for f in fuentes:
 		print "<a href='"+f+"'>"+f+"</a><br/>"
 	print "</div>"
+	print "</div>"
+	
 if __name__ == '__main__':
 	run()
 
