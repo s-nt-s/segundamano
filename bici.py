@@ -16,7 +16,7 @@ ahora=datetime.datetime.now()
 buscar=['trekking', 'cicloturismo', 'urbana', 'paseo']
 arr=[]
 bcs=[]
-no=re.compile(u".*(tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+no=re.compile(u".*(Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 rk=re.compile(".*?(\\d+)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 na=re.compile("\\s*Nuevo anuncio\\s*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 nb=re.compile("^\\D*(\\d+).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
@@ -24,7 +24,7 @@ sp1=re.compile("[ \t\n\r\f\v]+", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 sp2=re.compile("\\n[ \t\n\r\f\v]*\\n", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 minusculas = re.compile(".*[a-z].*")
 
-urls=['http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=100&pe=400', 'http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=100&hasta=400&demanda=n&vendedor=part&cerca=s', 'http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=100&_sadis=50&_fspt=1&_udhi=400&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684']
+urls=['http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=100&pe=400', 'http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=100&hasta=400&demanda=n&vendedor=part&cerca=s', 'http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=100&_sadis=50&_fspt=1&_udhi=400&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684','http://es.wallapop.com/search?catIds=12579&minPrice=100&maxPrice=400&dist=0_10000&order=creationDate-des&kws=bicicleta+%%s%%&lat=40.416775&lng=-3.703790']
 
 def fecha(dt):
 	if dt.startswith("hoy "):
@@ -184,6 +184,28 @@ def getS(url,soup):
 			b['des']=clean(get(u).select('#descriptionText'))
 			bcs.append(b)
 
+def getW(url,soup):
+	si=re.compile(".*(bici|bike).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+	ads=[a for a in soup.select('div.card-product')]
+	for ad in ads:
+		a=ad.select("a.product-info-title")[0]
+		u="http://es.wallapop.com"+a.attrs.get('href')
+		t=a.get_text().strip()
+		
+		if not no.match(t) and si.match(t) and not ya(u):
+			b=bici()
+			b['fuente']=url
+			b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
+			b['nombre']=t
+			b['url']=u
+			#b['fecha']=fecha(ad.select("li.date a")[0].get_text().strip())
+			i=ad.select('img.card-product-image')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+			b['des']=clean(get(u).select('p.card-product-detail-description'))
+			bcs.append(b)
+
+
 def run():
 
 	fuentes=[]
@@ -200,6 +222,8 @@ def run():
 					getM(u,soup)
 				elif dom=="www.ebay.es":
 					getE(u,soup)
+				elif dom=="es.wallapop.com":
+					getW(u,soup)
 
 	mindate = datetime.datetime(datetime.MINYEAR, 1, 1)
 	def ordenar(x):
