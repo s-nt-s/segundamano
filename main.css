@@ -55,10 +55,20 @@ div.r span.fecha {
 div.old {
 	display:none;
 }
-div.pie {
-	background-color: #02c75c;
-	padding: 8px 10px;
-}
 div.pie span.c {
 	float:right;
+}
+div.pie {
+	border: medium solid white;
+	border-radius: 5px;
+	color: white;
+	padding: 8px 10px;
+}
+.pie a {
+	background-image: url("http://www.milandasgupta.com/img/github.png");
+	background-origin: padding-box;
+	background-repeat: no-repeat;
+	background-size: 16px auto;
+	color: window;
+	padding-left: 20px;
 }
