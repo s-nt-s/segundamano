@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sqlite3
 import datetime
 import codecs
 import locale
@@ -10,13 +11,15 @@ import bs4
 import urlparse
 import re
 
+con= sqlite3.connect("db.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
+
 sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
 
 ahora=datetime.datetime.now()
 buscar=['trekking', 'cicloturismo', 'urbana', 'paseo']
 arr=[]
 bcs=[]
-no=re.compile(u".*(Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+no=re.compile(u".*(ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 rk=re.compile(".*?(\\d+)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 na=re.compile("\\s*Nuevo anuncio\\s*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 nb=re.compile("^\\D*(\\d+).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
@@ -25,6 +28,26 @@ sp2=re.compile("\\n[ \t\n\r\f\v]*\\n", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 minusculas = re.compile(".*[a-z].*")
 
 urls=['http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=100&pe=400', 'http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=100&hasta=400&demanda=n&vendedor=part&cerca=s', 'http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=100&_sadis=50&_fspt=1&_udhi=400&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684','http://es.wallapop.com/search?catIds=12579&minPrice=100&maxPrice=400&dist=0_10000&order=creationDate-des&kws=bicicleta+%%s%%&lat=40.416775&lng=-3.703790']
+
+def update(url,_price,dt):
+	price=int(nb.sub("\\1",_price))
+	c = con.cursor()
+	c.execute("select FCH, PRICE from AD where URL=?",(url,))
+	r=c.fetchone()
+	c.close()
+	if r and len(r)==2:
+		if dt>=r[0] and price==r[1]:
+			return r[0]
+		c = con.cursor()
+		c.execute("update AD set FCH=?, PRICE=? where URL=?", (dt, price, url))
+		c.close()
+		con.commit()
+	else:
+		c = con.cursor()
+		c.execute("insert into AD (URL, PRICE, FCH) values (?,?,?)",(url,price,dt))
+		c.close()
+		con.commit()
+	return dt
 
 def fecha(dt):
 	if dt.startswith("hoy "):
@@ -119,10 +142,11 @@ def getKm(_kms):
 
 def getE(url,soup):
 	ads=[a for a in soup.select('#ListViewInner li')]
-
+	fch=ahora - datetime.timedelta(minutes=10)
 	for ad in ads:
 		a=ad.select('a.vip')
 		if len(a)>0:
+			fch=(fch - datetime.timedelta(minutes=1))
 			u="http://www.ebay.es"+urlparse.urlparse(a[0].attrs.get('href')).path
 			t=a[0].get_text().strip()
 			t=na.sub("",t)
@@ -136,8 +160,32 @@ def getE(url,soup):
 				if len(i)>0:
 					b['img']=i[0].get('src').strip()
 				b['des']=clean(get(u).select('#desc_div'))
+				b['fecha']=update(u,b['precio'],fch)
 				bcs.append(b)
 
+def getW(url,soup):
+	si=re.compile(".*(bici|bike).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+	fch=ahora - datetime.timedelta(minutes=10)
+	ads=[a for a in soup.select('div.card-product')]
+	for ad in ads:
+		fch=(fch - datetime.timedelta(minutes=1))
+		a=ad.select("a.product-info-title")[0]
+		u="http://es.wallapop.com"+a.attrs.get('href')
+		t=a.get_text().strip()
+		
+		if not no.match(t) and si.match(t) and not ya(u):
+			b=bici()
+			b['fuente']=url
+			b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
+			b['nombre']=t
+			b['url']=u
+			#b['fecha']=fecha(ad.select("li.date a")[0].get_text().strip())
+			i=ad.select('img.card-product-image')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+			b['des']=clean(get(u).select('p.card-product-detail-description'))
+			b['fecha']=update(u,b['precio'],fch)
+			bcs.append(b)
 
 def getM(url,soup):
 	ads=[a for a in soup.select('div.x1')]
@@ -152,7 +200,8 @@ def getM(url,soup):
 			b['precio']=ad.select('div.pr')[0].get_text().strip()
 			b['nombre']=t
 			b['url']=u
-			b['fecha']=fecha(ad.select("div.x6")[0].get_text().strip())
+			fch=fecha(ad.select("div.x6")[0].get_text().strip())
+			b['fecha']=update(u,b['precio'],fch)
 			i=ad.select('img.ee')
 			if len(i)>0:
 				b['img']=i[0].get('src').strip()
@@ -177,34 +226,13 @@ def getS(url,soup):
 			b['precio']=ad.select('a.subjectPrice')[0].get_text().strip()
 			b['nombre']=t
 			b['url']=u
-			b['fecha']=fecha(ad.select("li.date a")[0].get_text().strip())
+			fch=fecha(ad.select("li.date a")[0].get_text().strip())
+			b['fecha']=update(u,b['precio'],fch)
 			i=ad.select('img.lazy')
 			if len(i)>0:
 				b['img']=i[0].attrs.get('title').strip()
 			b['des']=clean(get(u).select('#descriptionText'))
 			bcs.append(b)
-
-def getW(url,soup):
-	si=re.compile(".*(bici|bike).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
-	ads=[a for a in soup.select('div.card-product')]
-	for ad in ads:
-		a=ad.select("a.product-info-title")[0]
-		u="http://es.wallapop.com"+a.attrs.get('href')
-		t=a.get_text().strip()
-		
-		if not no.match(t) and si.match(t) and not ya(u):
-			b=bici()
-			b['fuente']=url
-			b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
-			b['nombre']=t
-			b['url']=u
-			#b['fecha']=fecha(ad.select("li.date a")[0].get_text().strip())
-			i=ad.select('img.card-product-image')
-			if len(i)>0:
-				b['img']=i[0].attrs.get('src').strip()
-			b['des']=clean(get(u).select('p.card-product-detail-description'))
-			bcs.append(b)
-
 
 def run():
 
@@ -255,7 +283,7 @@ def run():
 	print "</div>"
 	print "<div class='pie'>"
 	print u"<span class='a'>Última actualización: " + ahora.strftime("%d/%m/%y %H:%M")+"</span>"
-	print u"<span class='c'><a href='https://github.com/santos82/bicis'>código en github.com</a></span>"
+	print u"<span class='c'><a href='https://github.com/santos82/bicis'>código fuente</a></span>"
 	
 	
 	print "<div class='fuente'>"
