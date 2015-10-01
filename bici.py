@@ -253,36 +253,40 @@ def run():
 				elif dom=="es.wallapop.com":
 					getW(u,soup)
 
-	mindate = datetime.datetime(datetime.MINYEAR, 1, 1)
-	def ordenar(x):
-	  return x['fecha'] or mindate
+	_bcs=sorted(bcs, key=lambda x: x['fecha'], reverse=True)
 
-	_bcs=sorted(bcs, key=ordenar, reverse=True)
-	
+	d=0	
 	print "<div class='cuerpo'>"
 	for b in _bcs:
 		if not no.match(b['des']) and not b['des'].lower().startswith("compro "):
+			_dom=urlparse.urlparse(b['url']).hostname.split(".")
+			dom=_dom[len(_dom)-2]
 			p=nb.sub("\\1",b['precio'])
-			print "<div class='bici",
-			if b['fecha'] is not None and (ahora - b['fecha']).days>30:
-				print " old",
-			print "'>"
+			d=(ahora - b['fecha']).days
+			print "<div class='bici dia"+str(d)+" "+dom+"'>"
 			print "<h1><span class='precio'>"+p+"</span> <a href='"+b['url']+"'>"+b['nombre']+"</a></h1>"
 			print "<p>"+b['des']+"</p>"
-			print "<a class='fuente' href='"+b['fuente']+"'>Fuente</a>"
+			print "<a class='fuente' href='"+b['fuente']+"'>Fuente: "+dom+"</a>"
 			print "<div class='r'>"
-			if b['fecha']:
-				print "<span class='fecha'>"
-				print b['fecha'].strftime("%d/%m/%y %H:%M")
-				print "</span>"
+			print "<span class='fecha'>"
+			print b['fecha'].strftime("%d/%m/%y %H:%M")
+			print "</span>"
 			if b['img']:
 				print "<img src='"+b['img']+"'/>"
 			print "</div>"
 			print "</div>"
 
 	print "</div>"
-	print "<div class='pie'>"
+	print "<div class='pie caja'>"
 	print u"<span class='a'>Última actualización: " + ahora.strftime("%d/%m/%y %H:%M")+"</span>"
+	print u"<span class='js dias'> Viendo los últimos <select id='dias'>"
+	for _i in range(1,d):
+		i=str(_i)
+		print "<option value='"+i+"' ",
+		if _i==7:
+			print "selected='selected'",
+		print ">"+i+"</option>"
+	print u"</select> días</span>"
 	print u"<span class='c'><a href='https://github.com/santos82/bicis'>código fuente</a></span>"
 	
 	

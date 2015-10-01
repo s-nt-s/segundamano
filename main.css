@@ -1,3 +1,6 @@
+.dias:before {
+	content:"-";
+}
 body {
 	background-color: black;
 	font-family: Arial,Helvetica,sans-serif;
@@ -43,11 +46,11 @@ div.r img {
 }
 div.r span.fecha {
 	background-color: white;
-    position: absolute;
-    right: 0;
-    top: 0;
-    opacity: 0.8;
-    white-space: nowrap;
+	position: absolute;
+	right: 0;
+	top: 0;
+	opacity: 0.8;
+	white-space: nowrap;
 }
 .fuente {
 	display:none;
@@ -55,20 +58,46 @@ div.r span.fecha {
 div.old {
 	display:none;
 }
-div.pie span.c {
-	float:right;
-}
-div.pie {
+div.caja {
 	border: medium solid white;
 	border-radius: 5px;
 	color: white;
 	padding: 8px 10px;
+	position: relative;
 }
-.pie a {
+div.pie span.c {
+        position:absolute;
+        bottom:10px;
+        right:10px;
+}
+div.pie span.c a {
 	background-image: url("http://www.milandasgupta.com/img/github.png");
 	background-origin: padding-box;
 	background-repeat: no-repeat;
 	background-size: 16px auto;
-	color: window;
+	color: white;
 	padding-left: 20px;
 }
+#dias {
+	text-align: right;
+}
+.js {
+	display:none;
+}
+.bici {
+	background-size: 16px;
+	background-repeat: no-repeat;
+}
+.milanuncios {
+	background-image: url("http://www.milanuncios.com/favicon.ico");
+}
+.ebay {
+	background-image: url("https://aprescott.com/files/favicons/ebay.com-20080201-favicon.ico");
+}
+.segundamano {
+	background-image: url("http://www.segundamano.es/favicon.ico");
+}
+.wallapop {
+	background-image: url("http://es.wallapop.com/images/icons/favicon.ico");
+}
+
