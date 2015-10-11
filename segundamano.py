@@ -143,9 +143,9 @@ def get(url):
 		soup = bs4.BeautifulSoup(response.text,"lxml")
 		return soup
 	except Exception, e:
-		global fd
-		fd.write("<!-- " + url + " -->")
-		fd.write("<!-- " + str(e) + " -->")
+		#global fd
+		#fd.write("<!-- " + url + " -->")
+		#fd.write("<!-- " + str(e) + " -->")
 		return None
 
 def getKm(_kms):
