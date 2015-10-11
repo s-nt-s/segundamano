@@ -1,4 +1,2 @@
-body.html
-index.html
-db.sqlite3
-db.py
+*.html
+*.sqlite3

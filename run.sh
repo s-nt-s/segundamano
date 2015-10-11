@@ -2,11 +2,11 @@
 
 cd "$(dirname "$0")"
 
-python bici.py > body.html
+python segundamano.py bicis.yaml
 
 if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-cat head.html body.html foot.html > index.html
+cp bicis.html index.html
 wput -q -nc -u index.html ftp://back.host22.com/public_html/bicis/
