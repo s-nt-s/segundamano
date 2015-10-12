@@ -14,7 +14,7 @@ function setDias(d) {
 		d++;
 		aux=document.getElementsByClassName("dia"+d).length;
 	} while (aux==0)
-	document.getElementById("jscss").innerHTML="div.dia"+d+", div.dia"+d+" ~ div.bici {display: none;}";
+	document.getElementById("jscss").innerHTML="div.dia"+d+", div.dia"+d+" ~ div.item {display: none;}";
 }
 document.addEventListener("DOMContentLoaded", function(event) {
 	var dias=document.getElementById("dias");
