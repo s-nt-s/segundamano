@@ -1,8 +1,10 @@
 título: "Bicicletas de segunda mano en Madrid"
 salida: "bicis.html"
 buscar: ["trekking", "cicloturismo", "urbana", "paseo"]
-excluir: ".*(ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*"
-exigir: ".*(bici|bike).*"
+excluir: ".*(freno contra( |-)?pedal|ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*"
+
+wallapop: 
+  - ".*(bici|bike|orbea).*"
 urls:
   -
     "http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=100&pe=400"

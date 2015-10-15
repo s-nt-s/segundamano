@@ -1,4 +1,4 @@
-.dias:before {
+.js:before {
 	content:"-";
 }
 body {
@@ -68,9 +68,9 @@ div.caja {
 	position: relative;
 }
 div.pie span.c {
-        position:absolute;
-        bottom:10px;
-        right:10px;
+    position:absolute;
+    bottom:10px;
+    right:10px;
 }
 div.pie span.c a {
 	background-image: url("http://www.milandasgupta.com/img/github.png");

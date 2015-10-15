@@ -1,8 +1,7 @@
 título: "Teclados inalambricos de segunda mano en Madrid"
 salida: "teclados.html"
 buscar: ["placebo"]
-excluir: "^$"
-exigir: ".*"
+
 urls:
   -
     "http://www.segundamano.es/perifericos-de-segunda-mano-madrid-particulares/teclado-inalambrico.htm?ca=28_s&ps=5&pe=30&fPos=319&fOn=sb_pricelistTo"

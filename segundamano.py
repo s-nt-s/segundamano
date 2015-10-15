@@ -31,13 +31,13 @@ if not r or len(r)==0:
 	c.close()
 	con.commit()
 
-
 sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
 
 ahora=datetime.datetime.now()
+webs=[]
 arr=[]
 bcs=[]
-rk=re.compile(".*?(\\d+)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+rk=re.compile(".*?([\\.\\d]+)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 na=re.compile("\\s*Nuevo anuncio\\s*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 nb=re.compile("^\\D*(\\d+).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 sp1=re.compile("[ \t\n\r\f\v]+", re.IGNORECASE|re.MULTILINE|re.DOTALL)
@@ -63,6 +63,50 @@ def update(url,_price,dt):
 		c.close()
 		con.commit()
 	return dt
+
+def ya(url):
+	if url in arr:
+		return True
+	arr.append(url)
+	return False
+
+def filtrar(_t,_d):
+	t=None
+	d=None
+	if _t is not None and len(_t)>0:
+		t=_t
+	if _d is not None and len(_d)>0:
+		d=_d
+		if d.lower().startswith("compro "):
+			return False
+
+	if config['excluir'] is not None:
+		for e in config['excluir']:
+			if t is not None and e.match(t):
+				return False
+			if d is not None and e.match(d):
+				return False
+	
+	if web in config:
+		flt=config[web]
+		if t is not None and flt[0] is not None and not flt[0].match(t):
+			return False
+		if d is not None and flt[1] is not None and not flt[1].match(d):
+			return False
+
+	if t is not None and d is not None and config['encontrar'] is not None:
+		for e in config['encontrar']:
+			if not e.match(t) and not e.match(d):
+				return False
+
+	if web not in webs:
+		webs.append(web)
+
+	return True
+
+def dom(url):
+	_dom=urlparse.urlparse(url).hostname.split(".")
+	return _dom[len(_dom)-2]
 
 def fecha(dt):
 	if dt.startswith("hoy "):
@@ -126,13 +170,6 @@ def item():
 	b['img']=''
 	b['fecha']=None
 	return b
-	
-
-def ya(url):
-	if url in arr:
-		return 1
-	arr.append(url)
-	return 0
 
 def get(url):
 	try:
@@ -154,6 +191,7 @@ def getKm(_kms):
 	if z==0:
 		return 9999
 	km=kms[0]
+	km=km.replace(".","")
 	return int(km)
 
 def getE(url,soup):
@@ -166,20 +204,26 @@ def getE(url,soup):
 			u="http://www.ebay.es"+urlparse.urlparse(a[0].attrs.get('href')).path
 			t=a[0].get_text().strip()
 			t=na.sub("",t)
-			if not no.match(t) and not ya(u) and getKm(ad.select('ul.lvdetails li'))<50:
-				b=item()
-				b['fuente']=url
-				b['precio']=ad.select('li.lvprice span')[0].get_text().strip()
-				b['nombre']=t
-				b['url']=u
-				i=ad.select('img.img')
-				if len(i)>0:
-					b['img']=i[0].get('src').strip()
+
+			if not ya(u) and filtrar(t,None) and getKm(ad.select('ul.lvdetails li'))<50:
+				d=None
 				des=get(u)
 				if des is not None:
-					b['des']=clean(des.select('#desc_div'))
-				b['fecha']=update(u,b['precio'],fch)
-				bcs.append(b)
+					d=clean(des.select('#desc_div'))
+
+				if filtrar(t,d):
+					b=item()
+					b['des']=d
+					b['fuente']=url
+					b['precio']=ad.select('li.lvprice span')[0].get_text().strip()
+					b['nombre']=t
+					b['url']=u
+					i=ad.select('img.img')
+					if len(i)>0:
+						b['img']=i[0].get('src').strip()
+					b['fecha']=update(u,b['precio'],fch)
+					bcs.append(b)
+
 
 def getW(url,soup):
 	fch=ahora - datetime.timedelta(minutes=10)
@@ -190,21 +234,25 @@ def getW(url,soup):
 		u="http://es.wallapop.com"+a.attrs.get('href')
 		t=a.get_text().strip()
 		
-		if not no.match(t) and si.match(t) and not ya(u):
-			b=item()
-			b['fuente']=url
-			b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
-			b['nombre']=t
-			b['url']=u
-			#b['fecha']=fecha(ad.select("li.date a")[0].get_text().strip())
-			i=ad.select('img.card-product-image')
-			if len(i)>0:
-				b['img']=i[0].attrs.get('src').strip()
+		if not ya(u) and filtrar(t,None):
+			d=None
 			des=get(u)
 			if des is not None:
-				b['des']=clean(des.select('p.card-product-detail-description'))
-			b['fecha']=update(u,b['precio'],fch)
-			bcs.append(b)
+				d=clean(des.select('p.card-product-detail-description'))
+	
+			if filtrar(t,d):
+				b=item()
+				b['fuente']=url
+				b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
+				b['nombre']=t
+				b['des']=d
+				b['url']=u
+				i=ad.select('img.card-product-image')
+				if len(i)>0:
+					b['img']=i[0].attrs.get('src').strip()
+				b['fecha']=update(u,b['precio'],fch)
+				bcs.append(b)
+
 
 def getM(url,soup):
 	ads=[a for a in soup.select('div.x1')]
@@ -213,11 +261,14 @@ def getM(url,soup):
 		a=ad.select("a.cti")[0]
 		u="http://www.milanuncios.com" + a.attrs.get('href')
 		t=a.get_text().strip()
-		if not no.match(t) and not ya(u):
+		d=clean(ad.select('div.tx'))
+		
+		if not ya(u) and filtrar(t,d):
 			b=item()
 			b['fuente']=url
 			b['precio']=ad.select('div.pr')[0].get_text().strip()
 			b['nombre']=t
+			b['des']=d
 			b['url']=u
 			fch=fecha(ad.select("div.x6")[0].get_text().strip())
 			b['fecha']=update(u,b['precio'],fch)
@@ -230,7 +281,6 @@ def getM(url,soup):
 					sp=_sp.head.find("link", rel='image_src')
 					if sp is not None:
 						b['img']=sp['href']
-			b['des']=clean(ad.select('div.tx'))
 			bcs.append(b)
 
 def getS(url,soup):
@@ -240,38 +290,40 @@ def getS(url,soup):
 		a=ad.select("a.subjectTitle")[0]
 		u="http://www.segundamano.es"+urlparse.urlparse(a.attrs.get('href')).path
 		t=a.get_text().strip()
+		d=clean(get(u).select('#descriptionText'))
 
-		if not no.match(t) and not ya(u):
+		if not ya(u) and filtrar(t,d):
 			b=item()
 			b['fuente']=url
 			b['precio']=ad.select('a.subjectPrice')[0].get_text().strip()
 			b['nombre']=t
+			b['des']=d
 			b['url']=u
 			fch=fecha(ad.select("li.date a")[0].get_text().strip())
 			b['fecha']=update(u,b['precio'],fch)
 			i=ad.select('img.lazy')
 			if len(i)>0:
 				b['img']=i[0].attrs.get('title').strip()
-			b['des']=clean(get(u).select('#descriptionText'))
 			bcs.append(b)
 
 def run():
+	global web
 
 	fuentes=[]
-	for url in urls:
-		dom=urlparse.urlparse(url).hostname
-		for busca in buscar:
+	for url in config['urls']:
+		web=dom(url)
+		for busca in config['buscar']:
 			u=url.replace("%%s%%",busca)
 			soup=get(u)
 			fuentes.append(u)
 			if soup:
-				if dom=="www.segundamano.es":
+				if web=="segundamano":
 					getS(u,soup)
-				elif dom=="www.milanuncios.com":
+				elif web=="milanuncios":
 					getM(u,soup)
-				elif dom=="www.ebay.es":
+				elif web=="ebay":
 					getE(u,soup)
-				elif dom=="es.wallapop.com":
+				elif web=="wallapop":
 					getW(u,soup)
 
 	_bcs=sorted(bcs, key=lambda x: x['fecha'], reverse=True)
@@ -285,35 +337,38 @@ def run():
 	d=0	
 	fd.write("<div class='cuerpo'>")
 	for b in _bcs:
-		if not no.match(b['des']) and not b['des'].lower().startswith("compro "):
-			_dom=urlparse.urlparse(b['url']).hostname.split(".")
-			dom=_dom[len(_dom)-2]
-			p=nb.sub("\\1",b['precio'])
-			d=(ahora - b['fecha']).days
-			fd.write("<div class='item dia"+str(d)+" "+dom+"'>")
-			fd.write("<h1><span class='precio'>"+p+"</span> <a href='"+b['url']+"'>"+b['nombre']+"</a></h1>")
+		web=dom(b['url'])
+		p=nb.sub("\\1",b['precio'])
+		d=(ahora - b['fecha']).days
+		fd.write("<div class='item dia"+str(d)+" "+web+"'>")
+		fd.write("<h1><span class='precio'>"+p+"</span> <a href='"+b['url']+"'>"+b['nombre']+"</a></h1>")
+		if b['des'] is not None:
 			fd.write("<p>"+b['des']+"</p>")
-			fd.write("<a class='fuente' href='"+b['fuente']+"'>Fuente: "+dom+"</a>")
-			fd.write("<div class='r'>")
-			fd.write("<span class='fecha'>")
-			fd.write(b['fecha'].strftime("%d/%m/%y %H:%M"))
-			fd.write("</span>")
-			if b['img']:
-				fd.write("<img src='"+b['img']+"'/>")
-			fd.write("</div>")
-			fd.write("</div>")
+		fd.write("<a class='fuente' href='"+b['fuente']+"'>Fuente: "+web+"</a>")
+		fd.write("<div class='r'>")
+		fd.write("<span class='fecha'>")
+		fd.write(b['fecha'].strftime("%d/%m/%y %H:%M"))
+		fd.write("</span>")
+		if b['img']:
+			fd.write("<img src='"+b['img']+"'/>")
+		fd.write("</div>")
+		fd.write("</div>")
 
 	fd.write("</div>")
 	fd.write("<div class='pie caja'>")
 	fd.write(u"<span class='a'>Última actualización: " + ahora.strftime("%d/%m/%y %H:%M")+"</span>")
-	fd.write(u"<span class='js dias'> Viendo los últimos <select id='dias'>")
+	fd.write(u"<span class='js'> Viendo los últimos <select id='dias'>")
+	d=d+1
 	for _i in range(1,d):
 		i=str(_i)
 		fd.write("<option value='"+i+"' ")
 		if _i==7:
 			fd.write("selected='selected'")
 		fd.write(">"+i+"</option>")
-	fd.write(u"</select> días</span>")
+	fd.write(u"</select> días en ")
+	for w in webs:
+		fd.write("<input type='checkbox' name='web' id='"+w+"' value='"+w+"' checked='checked'/> <label for='"+w+"'>"+w+"</label> ")
+	fd.write("</span>")
 	fd.write(u"<span class='c'><a href='https://github.com/santos82/bicis'>código fuente</a></span>")
 	
 	
@@ -330,26 +385,61 @@ def run():
 	shutil.copy(path, config['salida'])
 	os.remove(path)
 
-if __name__ == "__main__":
+
+def getre(s):
+	if isinstance(s, basestring):
+		return [re.compile(s, re.IGNORECASE|re.MULTILINE|re.DOTALL)]
+	r=list()
+	for i in s:
+		r.append(re.compile(i, re.IGNORECASE|re.MULTILINE|re.DOTALL))
+	return r
+
+def configurar(_f):
 	global config
-	global buscar
 	global no
 	global si
-	global urls
-	global fd
+	global _wallapop
+
+	f= file(_f, 'r')
+	config = yaml.load(f)
 	
+
+	rg=['excluir','encontrar']
+	
+	for k in rg:
+		if k in config:
+			config[k]=getre(config[k])
+		else:
+			config[k]=None
+
+	doms=list()
+	for url in config['urls']:
+		d=dom(url)
+		if not d in doms:
+			doms.append(d)
+			if d in config:
+				if isinstance(config[d], basestring):
+					_re=re.compile(config[d], re.IGNORECASE|re.MULTILINE|re.DOTALL)
+					config[d]=[_re,_re]
+				else:
+					_re1=None
+					_re2=None
+					if len(config[d][0])>0:
+						_re1=re.compile(config[d][0], re.IGNORECASE|re.MULTILINE|re.DOTALL)
+					if len(config[d])>1:
+						_re2=re.compile(config[d][1], re.IGNORECASE|re.MULTILINE|re.DOTALL)
+					config[d]=[_re1,_re2]
+			else:
+				config[d]=[None,None]
+
+	f.close()
+
+if __name__ == "__main__":
 	ar = -1
 	if len(sys.argv) <= 1 or not os.path.exists(sys.argv[1]):
 		raise Exception(u'Debe pasar como argumento un fichero yaml válido')
-		
-	f= file(sys.argv[1], 'r')
-	
-	config = yaml.load(f)
 
-	buscar=config['buscar']
-	no=re.compile(config['excluir'], re.IGNORECASE|re.MULTILINE|re.DOTALL)
-	si=re.compile(config['exigir'], re.IGNORECASE|re.MULTILINE|re.DOTALL)
-	urls=config['urls']
+	configurar(sys.argv[1])
 
 	run()
 
