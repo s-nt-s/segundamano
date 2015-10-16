@@ -14,6 +14,7 @@ import yaml
 import os
 import tempfile
 import shutil
+import stat
 
 con = sqlite3.connect("db.sqlite3", detect_types=sqlite3.PARSE_DECLTYPES)
 
@@ -37,7 +38,7 @@ ahora=datetime.datetime.now()
 webs=[]
 arr=[]
 bcs=[]
-rk=re.compile(".*?([\\.\\d]+)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
+rk=re.compile(".*?(\\d[\\.\\d]*)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 na=re.compile("\\s*Nuevo anuncio\\s*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 nb=re.compile("^\\D*(\\d+).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 sp1=re.compile("[ \t\n\r\f\v]+", re.IGNORECASE|re.MULTILINE|re.DOTALL)
@@ -45,7 +46,9 @@ sp2=re.compile("\\n[ \t\n\r\f\v]*\\n", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 minusculas = re.compile(".*[a-z].*")
 
 def update(url,_price,dt):
-	price=int(nb.sub("\\1",_price))
+	price=-1
+	if _price.isdigit():
+		price=int(_price)
 	c = con.cursor()
 	c.execute("select FCH, PRICE from AD where URL=?",(url,))
 	r=c.fetchone()
@@ -215,7 +218,7 @@ def getE(url,soup):
 					b=item()
 					b['des']=d
 					b['fuente']=url
-					b['precio']=ad.select('li.lvprice span')[0].get_text().strip()
+					b['precio']=nb.sub("\\1",ad.select('li.lvprice span')[0].get_text().strip())
 					b['nombre']=t
 					b['url']=u
 					i=ad.select('img.img')
@@ -243,7 +246,7 @@ def getW(url,soup):
 			if filtrar(t,d):
 				b=item()
 				b['fuente']=url
-				b['precio']=ad.select('span.product-info-price')[0].get_text().strip()
+				b['precio']=nb.sub("\\1",ad.select('span.product-info-price')[0].get_text().strip())
 				b['nombre']=t
 				b['des']=d
 				b['url']=u
@@ -265,8 +268,10 @@ def getM(url,soup):
 		
 		if not ya(u) and filtrar(t,d):
 			b=item()
+			pr=ad.select('div.pr')
+			if pr is not None and len(pr)>0:
+				b['precio']=nb.sub("\\1",pr[0].get_text().strip())
 			b['fuente']=url
-			b['precio']=ad.select('div.pr')[0].get_text().strip()
 			b['nombre']=t
 			b['des']=d
 			b['url']=u
@@ -295,7 +300,7 @@ def getS(url,soup):
 		if not ya(u) and filtrar(t,d):
 			b=item()
 			b['fuente']=url
-			b['precio']=ad.select('a.subjectPrice')[0].get_text().strip()
+			b['precio']=nb.sub("\\1",ad.select('a.subjectPrice')[0].get_text().strip())
 			b['nombre']=t
 			b['des']=d
 			b['url']=u
@@ -330,7 +335,7 @@ def run():
 
 	_, path = tempfile.mkstemp()
 	fd=codecs.open(path, "w", encoding="utf-8")
-	with open('head.html') as head:
+	with open('includes/head.html') as head:
 		h=head.read().replace("<title></title>","<title>"+config[u'título']+"</title>")
 		fd.write(h)
 
@@ -338,10 +343,9 @@ def run():
 	fd.write("<div class='cuerpo'>")
 	for b in _bcs:
 		web=dom(b['url'])
-		p=nb.sub("\\1",b['precio'])
 		d=(ahora - b['fecha']).days
 		fd.write("<div class='item dia"+str(d)+" "+web+"'>")
-		fd.write("<h1><span class='precio'>"+p+"</span> <a href='"+b['url']+"'>"+b['nombre']+"</a></h1>")
+		fd.write("<h1><span class='precio'>"+b['precio']+"</span> <a href='"+b['url']+"'>"+b['nombre']+"</a></h1>")
 		if b['des'] is not None:
 			fd.write("<p>"+b['des']+"</p>")
 		fd.write("<a class='fuente' href='"+b['fuente']+"'>Fuente: "+web+"</a>")
@@ -367,7 +371,10 @@ def run():
 		fd.write(">"+i+"</option>")
 	fd.write(u"</select> días en ")
 	for w in webs:
-		fd.write("<input type='checkbox' name='web' id='"+w+"' value='"+w+"' checked='checked'/> <label for='"+w+"'>"+w+"</label> ")
+		fd.write("<input type='checkbox' name='web' id='"+w+"' value='"+w+"' ")
+		if w!="wallapop":
+			fd.write("checked='checked'")
+		fd.write("/> <label for='"+w+"'>"+w+"</label> ")
 	fd.write("</span>")
 	fd.write(u"<span class='c'><a href='https://github.com/santos82/bicis'>código fuente</a></span>")
 	
@@ -378,12 +385,13 @@ def run():
 	fd.write("</div>")
 	fd.write("</div>")
 	
-	with open('foot.html') as foot:
+	with open('includes/foot.html') as foot:
 		fd.write(foot.read())
 	
 	fd.close()
 	shutil.copy(path, config['salida'])
 	os.remove(path)
+	os.chmod(config['salida'], 0644)
 
 
 def getre(s):

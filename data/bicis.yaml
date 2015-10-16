@@ -1,5 +1,5 @@
 título: "Bicicletas de segunda mano en Madrid"
-salida: "bicis.html"
+salida: "out/bicis.html"
 buscar: ["trekking", "cicloturismo", "urbana", "paseo"]
 excluir: ".*(freno contra( |-)?pedal|ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad).*"
 

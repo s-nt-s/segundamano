@@ -2,11 +2,9 @@
 
 cd "$(dirname "$0")"
 
-python segundamano.py bicis.yaml
+for f in data/*.yaml; do
+	python segundamano.py "$f"
+done
 
-if [ $? -ne 0 ]; then
-	exit 1
-fi
-
-cp bicis.html index.html
-wput -q -nc -u index.html ftp://back.host22.com/public_html/bicis/
+cd out
+wput -q -nc -u *.* ftp://back.host22.com/public_html/sm/
