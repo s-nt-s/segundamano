@@ -1,0 +1,37 @@
+título: "Tarjetas sd de segunda mano en Madrid"
+salida: "out/sd.html"
+buscar: ["sdhc", "SanDisk", "sdxc", "Kingston","tarjeta+de+memoria"]
+excluir: 
+  -
+    ".*\\b(SmartMedia|RAM)\\b.*"
+  -
+    "^(Funda|Bater[ií]a|Marco|c[aá]mara|Placa base|Despiece|Lector|Altavoz|GPS|Mp3|pen ?drive|Lector|caja|marcado digital|mobile|ram )s?.*"
+  -
+    ".*(sodimm| ram | ddr[0-9]? |modem|casio|ERICSSON|wifi|mp3 player|nokia|HUAWEI|router|BLACKBERRY|Reproductor Bluray).*"
+encontrar: 
+  -
+    ".*(64|128) ?gb.*"
+urls:
+  -
+    "http://www.segundamano.es/accesorios-moviles-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&ps=10&pe=30&fPos=0&fOn=sb_sublevel1"
+  -
+    "http://www.segundamano.es/accesorios-de-fotografia-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&ps=10&pe=30&fPos=0&fOn=sb_sublevel1"
+  -
+    "http://www.segundamano.es/componentes-electronicos-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&ps=10&pe=30&fPos=0&fOn=sb_sublevel1"
+  -
+    "http://www.segundamano.es/accesorios-electronica-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&ps=10&pe=30&fPos=0&fOn=sb_cat"
+  -
+    "http://www.segundamano.es/imagen-sonido-madrid-particulares/%%s%%.htm?ca=28_s&ps=10&pe=30&fPos=0&fOn=sb_cat"
+  -
+    "http://www.milanuncios.com/otros-componentes-en-madrid/%%s%%.htm?desde=10&hasta=30&demanda=n&vendedor=part&cerca=s"
+  -
+    "http://www.milanuncios.com/imagen-y-sonido-en-madrid/%%s%%.htm?desde=10&hasta=30&demanda=n&vendedor=part&cerca=s"
+  -
+    "http://www.milanuncios.com/telefonia-en-madrid/%%s%%.htm?desde=10&hasta=30&demanda=n&vendedor=part&cerca=s"
+  -
+    "http://www.ebay.es/sch/Tarjetas-de-memoria-/18871/i.html?_udlo=10&_sadis=50&_fspt=1&_udhi=30&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
+  -
+    "http://www.ebay.es/sch/Unidad-USB-flash-/51071/i.html?_udlo=10&_sadis=50&_fspt=1&_udhi=30&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
+  -
+    "http://www.ebay.es/sch/Tarjetas-de-memoria-/96991/i.html?_udlo=10&_sadis=50&_fspt=1&_udhi=30&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
+

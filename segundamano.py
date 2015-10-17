@@ -198,6 +198,11 @@ def getKm(_kms):
 	return int(km)
 
 def getE(url,soup):
+	aviso=soup.select("p.sm-md")
+	if aviso is not None and len(aviso)==1:
+		av=aviso[0].get_text().strip().lower()
+		if av.startswith(u"hemos encontrado 0 resultados en la categoría") and av.endswith(u", por lo que también hemos buscado en todas las categorías"):
+			return
 	ads=[a for a in soup.select('#ListViewInner li')]
 	fch=ahora - datetime.timedelta(minutes=10)
 	for ad in ads:
@@ -318,7 +323,7 @@ def run():
 	for url in config['urls']:
 		web=dom(url)
 		for busca in config['buscar']:
-			u=url.replace("%%s%%",busca)
+			u=url.replace("%%s%%",busca.lower())
 			soup=get(u)
 			fuentes.append(u)
 			if soup:
