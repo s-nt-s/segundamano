@@ -5,7 +5,6 @@ import datetime
 import codecs
 import locale
 import sys
-
 import requests
 import bs4
 import urlparse
@@ -88,6 +87,11 @@ def filtrar(_t,_d):
 			if t is not None and e.match(t):
 				return False
 			if d is not None and e.match(d):
+				return False
+	
+	if config[u'sintítulo'] is not None and t is not None:
+		for e in config[u'sintítulo']:
+			if t is not None and e.match(t):
 				return False
 	
 	if web in config:
@@ -316,6 +320,29 @@ def getS(url,soup):
 				b['img']=i[0].attrs.get('title').strip()
 			bcs.append(b)
 
+def getN(url,soup):
+	ads=[a for a in soup.select('div.ad_excerpt_home')]
+
+	for ad in ads:
+		a=ad.select("h4 a")[0]
+		u="http://nolotiro.org"+urlparse.urlparse(a.attrs.get('href')).path
+		t=a.get_text().strip()
+		d=clean(get(u).select('div p'))
+		if not ya(u) and filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']="0"
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=ad.select(".js-moment")[0].attrs.get('title').strip()
+			fch=datetime.datetime.strptime(f, '%Y-%m-%d %H:%M:%S UTC')
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+			bcs.append(b)
+
 def run():
 	global web
 
@@ -335,6 +362,8 @@ def run():
 					getE(u,soup)
 				elif web=="wallapop":
 					getW(u,soup)
+				elif web=="nolotiro":
+					getN(u,soup)
 
 	_bcs=sorted(bcs, key=lambda x: x['fecha'], reverse=True)
 
@@ -366,7 +395,7 @@ def run():
 	fd.write("</div>")
 	fd.write("<div class='pie caja'>")
 	fd.write(u"<span class='a'>Última actualización: " + ahora.strftime("%d/%m/%y %H:%M")+"</span>")
-	fd.write(u"<span class='js'> Viendo los últimos <select id='dias'>")
+	fd.write(u"<span class='flt js'> Viendo los últimos <select id='dias'>")
 	d=d+1
 	for _i in range(1,d):
 		i=str(_i)
@@ -417,7 +446,7 @@ def configurar(_f):
 	config = yaml.load(f)
 	
 
-	rg=['excluir','encontrar']
+	rg=['excluir','encontrar',u'sintítulo']
 	
 	for k in rg:
 		if k in config:

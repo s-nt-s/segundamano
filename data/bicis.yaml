@@ -6,11 +6,7 @@ excluir: ".*(freno contra( |-)?pedal|ruedas de tacos|Contrapedal|tamaño plegada
 wallapop: 
   - ".*(bici|bike|orbea).*"
 urls:
-  -
-    "http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=70&pe=300"
-  -
-    "http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=70&hasta=300&demanda=n&vendedor=part&cerca=s"
-  -
-    "http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=70&_sadis=50&_fspt=1&_udhi=300&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
-  -
-    "http://es.wallapop.com/search?catIds=12579&minPrice=70&maxPrice=300&dist=0_10000&order=creationDate-des&kws=bicicleta+%%s%%&lat=40.416775&lng=-3.703790"
+  - "http://www.segundamano.es/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=70&pe=300"
+  - "http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=70&hasta=300&demanda=n&vendedor=part&cerca=s"
+  - "http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=70&_sadis=50&_fspt=1&_udhi=300&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
+  - "http://es.wallapop.com/search?catIds=12579&minPrice=70&maxPrice=300&dist=0_10000&order=creationDate-des&kws=bicicleta+%%s%%&lat=40.416775&lng=-3.703790"

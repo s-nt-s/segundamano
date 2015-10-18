@@ -1,4 +1,4 @@
-.js:before {
+.flt:before {
 	content:"-";
 }
 body {
@@ -97,5 +97,8 @@ div.pie span.c a {
 }
 .wallapop {
 	background-image: url("http://es.wallapop.com/images/icons/favicon.ico");
+}
+.nolotiro {
+	background-image: url("http://nolotiro.org/assets/favicon-c7a895cdf42ceb50225a216c0f0f3213.ico");
 }
 
