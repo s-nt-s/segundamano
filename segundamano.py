@@ -116,6 +116,10 @@ def dom(url):
 	return _dom[len(_dom)-2]
 
 def fecha(dt):
+	if dt == "hoy":
+		return ahora
+	if dt == "ayer":
+		return (ahora.replace(hour=0,minute=0) - datetime.timedelta(days=1))
 	if dt.startswith("hoy "):
 		return ahora.replace(hour=int(dt[4:6]),minute=int(dt[7:9]))
 	if dt.startswith("ayer "):
@@ -156,7 +160,9 @@ def fecha(dt):
 		mes=12
 	else:
 		return None
-	return ahora.replace(day=int(sp[0]),hour=int(sp[2][0:2]),minute=int(sp[2][3:5]),month=mes)
+	if len(sp)>2:
+		return ahora.replace(day=int(sp[0]),hour=int(sp[2][0:2]),minute=int(sp[2][3:5]),month=mes)
+	return ahora.replace(day=int(sp[0]),hour=0,minute=0,month=mes)
 
 def clean(_s):
 	if len(_s)==0:
@@ -298,11 +304,11 @@ def getM(url,soup):
 			bcs.append(b)
 
 def getS(url,soup):
-	ads=[a for a in soup.select('ul.basicList.list_ads_row')]
+	ads=[a for a in soup.select('div.basicList.list_ads_row')]
 
 	for ad in ads:
 		a=ad.select("a.subjectTitle")[0]
-		u="http://www.segundamano.es"+urlparse.urlparse(a.attrs.get('href')).path
+		u="http://www.vibbo.com"+urlparse.urlparse(a.attrs.get('href')).path
 		t=a.get_text().strip()
 		d=clean(get(u).select('#descriptionText'))
 
@@ -313,7 +319,7 @@ def getS(url,soup):
 			b['nombre']=t
 			b['des']=d
 			b['url']=u
-			fch=fecha(ad.select("li.date a")[0].get_text().strip())
+			fch=fecha(ad.select("p.date a")[0].get_text().strip())
 			b['fecha']=update(u,b['precio'],fch)
 			i=ad.select('img.lazy')
 			if len(i)>0:
@@ -354,7 +360,7 @@ def run():
 			soup=get(u)
 			fuentes.append(u)
 			if soup:
-				if web=="segundamano":
+				if web=="vibbo":
 					getS(u,soup)
 				elif web=="milanuncios":
 					getM(u,soup)
