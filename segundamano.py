@@ -37,6 +37,7 @@ ahora=datetime.datetime.now()
 webs=[]
 arr=[]
 bcs=[]
+fm=re.compile(".*(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) (\d+), (20\d\d).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 rk=re.compile(".*?(\\d[\\.\\d]*)\\s+km\\s+.*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 na=re.compile("\\s*Nuevo anuncio\\s*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
 nb=re.compile("^\\D*(\\d+).*", re.IGNORECASE|re.MULTILINE|re.DOTALL)
@@ -115,7 +116,57 @@ def dom(url):
 	_dom=urlparse.urlparse(url).hostname.split(".")
 	return _dom[len(_dom)-2]
 
+def getMes(m):
+	m=m[0:3].lower()
+	if m=="ene":
+		return 1
+	if m=="feb":
+		return 2
+	if m=="mar":
+		return 3
+	if m=="abr":
+		return 4
+	if m=="may":
+		return 5
+	if m=="jun":
+		return 6
+	if m=="jul":
+		return 7
+	if m=="ago":
+		return 8
+	if m=="sep":
+		return 9
+	if m=="oct":
+		return 10
+	if m=="nov":
+		return 11
+	if m=="dic":
+		return 12
+	return None
+
 def fecha(dt):
+	m=fm.match(dt)
+	if m:
+		return ahora.replace(day=int(m.group(2)),month=getMes(m.group(1)),year=int(m.group(3)))
+	if dt=="Hace 1 min":
+		return ahora
+	if dt.startswith("Hace "):
+		sp=dt.split()[1:]
+		d=0
+		h=0
+		m=0
+		for s in sp:
+			c=s[-1]
+			r=int(s[0:-1])
+			if c=="d":
+				d=r
+			elif c=="h":
+				h=r
+			elif c=="m":
+				m=r
+			else:
+				print s
+		return (ahora - datetime.timedelta(days=d,minutes=m,hours=h))
 	if dt == "hoy":
 		return ahora
 	if dt == "ayer":
@@ -134,31 +185,8 @@ def fecha(dt):
 		return ahora - datetime.timedelta(hours=int(sp[0]))
 	if sp[1]=="dia" or sp[1]=="dias" or unicode(sp[1])==u"día" or unicode(sp[1])==u"días":
 		return ahora - datetime.timedelta(days=int(sp[0]))
-	if sp[1]=="ene":
-		mes=1
-	elif sp[1]=="feb":
-		mes=2
-	elif sp[1]=="mar":
-		mes=3
-	elif sp[1]=="abr":
-		mes=4
-	elif sp[1]=="may":
-		mes=5
-	elif sp[1]=="jun":
-		mes=6
-	elif sp[1]=="jul":
-		mes=7
-	elif sp[1]=="ago":
-		mes=8
-	elif sp[1]=="sep":
-		mes=9
-	elif sp[1]=="oct":
-		mes=10
-	elif sp[1]=="nov":
-		mes=11
-	elif sp[1]=="dic":
-		mes=12
-	else:
+	mes=getMes(sp[1])
+	if not mes:
 		return None
 	if len(sp)>2:
 		return ahora.replace(day=int(sp[0]),hour=int(sp[2][0:2]),minute=int(sp[2][3:5]),month=mes)
@@ -349,6 +377,138 @@ def getN(url,soup):
 				b['img']=i[0].attrs.get('src').strip()
 			bcs.append(b)
 
+def getBicitroc(url,soup):
+	ads=[a for a in soup.select('li.listing-card')]
+	
+	for ad in ads:
+		a=ad.select("a")[1]
+		u=a.attrs.get('href')
+		t=a.get_text().strip()
+		d=clean([ad.p])
+		if not ya(u) and filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']=nb.sub("\\1",ad.select('span.currency-value')[0].get_text().strip())
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=ad.select("div.listing-attributes")[0].get_text().split('-')[-1].strip()
+			fch=fecha(f)
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+			bcs.append(b)
+
+def getTodobicis(url,soup):
+	ads=[a for a in soup.select('div.views-row') if len(a.select(".Vendido"))==0 and len(a.select("div.field-name-marca-modelo"))>0]
+	
+	for ad in ads:
+		div=ad.select("div.field-name-marca-modelo")[0]
+		a=div.a
+		u="http://todobicis.net"+a.attrs.get('href')
+		if ya(u):
+			continue
+		a.append(" ")
+		t=a.parent.get_text().strip()
+		d=clean(get(u).select(".field-name-field-descripcion-breve"))
+		if filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']=nb.sub("\\1",ad.select('div.field-name-field-precio')[0].get_text().strip())
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=ad.select("span.date-display-single")[0].attrs.get('content').strip()[0:-6]
+			fch=datetime.datetime.strptime(f, '%Y-%m-%dT%H:%M:%S')
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+			bcs.append(b)
+
+def getMerkabici(url,soup):
+	ads=[a for a in soup.select('div.box-list') if len(a.select("div.type"))==0]
+	
+	for ad in ads:
+		a=ad.select("div.title")[0].a
+		u=a.attrs.get('href')
+		if ya(u):
+			continue
+		t=a.get_text().strip()
+		d=clean(get(u).select("span[itemprop=description]"))
+		if filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']=nb.sub("\\1",ad.select('div.price')[0].get_text().strip())
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=ad.select("span.time")[0].get_text().strip()
+			fch=fecha(f)
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']="http://www.merkabici.es/"+i[0].attrs.get('src').strip()
+				if b['img'].endswith("default.gif"):
+					b['img']=None
+			bcs.append(b)
+
+def getAnunciosmtb(url,soup,pmin,pmax):
+	ads=[a for a in soup.select('ul.item-list li') if "id" not in a.attrs]
+	
+	for ad in ads:
+		div=ad.select("div.info")[0]
+		a=div.a
+		u=a.attrs.get('href')
+		t=a.get_text().strip()
+		d=clean([div.select("p")[1]])
+		p=int(nb.sub("\\1",ad.select('div.price')[0].get_text().replace(".","").strip()))
+		if p>=pmin and p<=pmax and not ya(u) and filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']=str(p)
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=[a.get_text().strip().split(' ')[1] for a in ad.select("span.dato") if a.get_text().strip().startswith("Publicado ")][0]
+			fch=datetime.datetime.strptime(f, '%d-%m-%Y')
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']=i[0].attrs.get('src').strip()
+				if b['img'].endswith("default.gif"):
+					b['img']=None
+			bcs.append(b)
+
+def getBicicleta(url,soup,pmin,pmax):
+	ads=[a for a in soup.select('tr') if len(a.select("td.thumb_td"))==1]
+	
+	for ad in ads:
+		a=ad.select("a")[1]
+		u="http://www.bicicleta.es"+a.attrs.get('href')
+		p=int(nb.sub("\\1",ad.select('td.precio')[0].get_text().replace(",00","").strip()))
+		if ya(u) or not(p>=pmin and p<=pmax):
+			continue
+		t=a.get_text().strip()
+		d=clean(get(u).select("td.descripcion"))
+		if filtrar(t,d):
+			b=item()
+			b['fuente']=url
+			b['precio']=str(p)
+			b['nombre']=t
+			b['des']=d
+			b['url']=u
+			f=sp1.sub(" ",ad.td.get_text()).strip()
+			fch=datetime.datetime.strptime(f, '%d/%m/%y %H:%M')
+			b['fecha']=update(u,b['precio'],fch)
+			i=ad.select('img')
+			if len(i)>0:
+				b['img']="http://www.bicicleta.es"+i[0].attrs.get('src').strip()
+				if b['img'].endswith("default.gif"):
+					b['img']=None
+			bcs.append(b)
+
 def run():
 	global web
 
@@ -357,20 +517,36 @@ def run():
 		web=dom(url)
 		for busca in config['buscar']:
 			u=url.replace("%%s%%",busca.lower())
-			soup=get(u)
-			fuentes.append(u)
-			if soup:
-				if web=="vibbo":
-					getS(u,soup)
-				elif web=="milanuncios":
-					getM(u,soup)
-				elif web=="ebay":
-					getE(u,soup)
-				elif web=="wallapop":
-					getW(u,soup)
-				elif web=="nolotiro":
-					getN(u,soup)
+			if config['precio']:
+				u=u.replace("%%MIN%%",str(config['precio'][0])).replace("%%MAX%%",str(config['precio'][1]))
+			if u not in fuentes:
+				soup=get(u)
+				fuentes.append(u)
+				if soup:
+					if web=="vibbo":
+						getS(u,soup)
+					elif web=="milanuncios":
+						getM(u,soup)
+					elif web=="ebay":
+						getE(u,soup)
+					elif web=="wallapop":
+						getW(u,soup)
+					elif web=="nolotiro":
+						getN(u,soup)
+					elif web=="bicitroc":
+						getBicitroc(u,soup)
+					elif web=="todobicis":
+						getTodobicis(u,soup)
+					elif web=="merkabici":
+						getMerkabici(u,soup)
+					elif web=="anunciosmtb":
+						getAnunciosmtb(u,soup,config['precio'][0],config['precio'][1])
+					elif web=="bicicleta":
+						getBicicleta(u,soup,config['precio'][0],config['precio'][1])
 
+	_prcs=sorted([int(b['precio'].strip()) for b in bcs if b['precio'].strip().isdigit()])
+	if len(_prcs)>1:
+		config[u'título']=config[u'título']+" (de "+str(_prcs[0])+" a "+str(_prcs[-1])+u" €)"
 	_bcs=sorted(bcs, key=lambda x: x['fecha'], reverse=True)
 
 	_, path = tempfile.mkstemp()
@@ -406,7 +582,7 @@ def run():
 	for _i in range(1,d):
 		i=str(_i)
 		fd.write("<option value='"+i+"' ")
-		if _i==7:
+		if _i==90:
 			fd.write("selected='selected'")
 		fd.write(">"+i+"</option>")
 	fd.write(u"</select> días en ")

@@ -53,6 +53,10 @@ div.r span.fecha {
 	top: 0;
 	opacity: 0.8;
 	white-space: nowrap;
+	display:none;
+}
+div.item:hover span.fecha {
+	display:inline;
 }
 .fuente {
 	display:none;
@@ -103,5 +107,20 @@ div.pie span.c a {
 }
 .nolotiro {
 	background-image: url("http://nolotiro.org/assets/favicon-c7a895cdf42ceb50225a216c0f0f3213.ico");
+}
+.bicitroc {
+	background-image: url("http://www.bicitroc.com/favicon.ico");
+}
+.todobicis {
+	background-image: url("http://todobicis.net/sites/default/files/iconfave_bicis.jpg");
+}
+.merkabici {
+	background-image: url("http://www.merkabici.es/favicon.ico");
+}
+.anunciosmtb {
+	background-image: url("http://anunciosmtb.com/favicon.ico");
+}
+.bicicleta {
+	background-image: url("http://www.bicicleta.es/favicon.ico");
 }
 
