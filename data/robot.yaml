@@ -1,0 +1,17 @@
+title: 'Robot aspirador en Madrid'
+out: 'robot.html'
+search: 'robot aspirador'
+min_price: 20
+max_price: 400
+lat: 40.416775
+lng: -3.703790
+km: 50
+exclude:
+  - "\\bFuera De Stock\\b"
+  - "\\bVendo por no usar al tener un robot aspirador\\b"
+  - "\\brobot aspiradora kirey\\b"
+urls:
+  - https://www.milanuncios.com/aspiradoras-en-madrid/?demanda=n&vendedor=part
+  - https://www.vibbo.com/electrodomesticos-de-segunda-mano-madrid-particulares/?ca=28_s&fPos=139&fOn=sb_pricelistTo
+  - https://www.ebay.es/sch/Aspiradoras/20614/i.html?_from=R40&LH_ItemCondition=1500%7C2500%7C3000&_sadis=50&_fspt=1&_stpos=28806&LH_PrefLoc=99&_dcat=20614&rt=nc&LH_AllListings=1
+  - https://es.wallapop.com/rest/items?catIds=13100&dist=50&publishDate=any

@@ -1,20 +1,18 @@
-título: "Bicicletas de segunda mano en Madrid"
-salida: "out/bicis.html"
-buscar: ["trekking", "cicloturismo", "urbana", "paseo"]
-excluir: ".*(Mbk|Falta un pedal|talla S|Tandem|MOTORETTA|24 pulgadas|playera|Spinning|Raleigh saffron|freno( a)? contra( |-)?pedal|Fixed|pegable|ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad|talla XL|talla grande 25|btwin bcool|SIN MARCHAS|MINIBICI|Monty F18 Logick).*"
-precio: [70, 400]
+title: "Bicicletas de segunda mano en Madrid"
+out: "bicis.html"
+search: ["trekking", "cicloturismo", "urbana", "paseo"]
+exclude: ".*(Mbk|Falta un pedal|talla S|Tandem|MOTORETTA|24 pulgadas|playera|Spinning|Raleigh saffron|freno( a)? contra( |-)?pedal|Fixed|pegable|ruedas de tacos|Contrapedal|tamaño plegada|un solo piñ[oó]n|fixie|PLEGABLE|Motoreta|piñ[oó]n fijo|niñ[oa]|Bicicleta est[aá]tica|single speed|única velocidad|talla XL|talla grande 25|btwin bcool|SIN MARCHAS|MINIBICI|Monty F18 Logick).*"
+min_price: 70
+max_price: 400
+lat: 40.416775
+lng: -3.703790
+km: 50
 
-wallapop: 
-  - ".*(bici|bike|orbea).*"
+exclude_wallapop_title: ".*(remolque|Bielas Shimano|Garmin Edge|casco de).*"
+find_wallapop_title: ".*(bici|bike|orbea).*"
+
 urls:
-  - "http://www.vibbo.com/bicicletas-paseo-de-segunda-mano-madrid-particulares/%%s%%.htm?ca=28_s&sort_by=1&od=1&ps=%%MIN%%&pe=%%MAX%%"
-  - "http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/%%s%%.htm?desde=%%MIN%%&hasta=%%MAX%%&demanda=n&vendedor=part&cerca=s"
-  - "http://www.ebay.es/sch/Bicicletas-/177831/i.html?_udlo=%%MIN%%&_sadis=50&_fspt=1&_udhi=%%MAX%%&_mPrRngCbx=1&_stpos=28005&_from=R40&_nkw=bicicleta%20%%s%%&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
-  - "http://es.wallapop.com/search?catIds=12579&minPrice=%%MIN%%&maxPrice=%%MAX%%&dist=0_10000&order=creationDate-des&kws=bicicleta+%%s%%&lat=40.416775&lng=-3.703790"
-  - "http://www.bicitroc.com/search/sOrder,dt_pub_date/iOrderType,/pattern,/region,781313/category,carretera/sPriceMin,%%MIN%%/sPriceMax,%%MAX%%/"
-  - "http://www.bicitroc.com/search/sOrder,dt_pub_date/iOrderType,/pattern,/region,781313/category,urbana/sPriceMin,%%MIN%%/sPriceMax,%%MAX%%/"
-  - "http://todobicis.net/buscador-avanzado?shs_term_node_tid_depth=106&field_anuncio_talla_value[]=M&field_anuncio_talla_value[]=L&field_anuncio_talla_value[]=NSNC&field_anuncio_medida_ruedas_value[]=26&field_anuncio_medida_ruedas_value[]=27%2C5&field_anuncio_medida_ruedas_value[]=29&field_anuncio_medida_ruedas_value[]=700&field_anuncio_medida_ruedas_value[]=Otra&field_anuncio_medida_ruedas_value[]=NSNC&field_anuncio_material_value=All&field_anuncio_recorrido_value=All&field_anuncio_funcionamiento_value=All&field_anuncio_eje_value=All&field_anuncio_posicion_value=All&field_anuncio_modalidad_value=All&field_anuncio_velocidades_value=All&field_anuncio_disco_value=All&field_anuncio_diametro_tija_value=All&field_anuncio_largo_value=All&field_anuncio_cierre_value=All&field_anuncio_medida_value=&field_anuncio_ancho_value=&field_anuncio_tipo_value=&field_anuncio_tejido_value=&field_anuncio_capacidad_value=&field_anuncio_potencia_value=&field_bicicleta_marca_value=&field_bicicleta_modelo_value=&field_precio_value_1=%%MIN%%&field_precio_value_2=%%MAX%%&field_anuncio_provincia_value=Madrid&sort_bef_combine=field_fecha_anuncio_value+DESC"
-  - "http://todobicis.net/buscador-avanzado?shs_term_node_tid_depth=8785&field_anuncio_material_value=All&field_anuncio_recorrido_value=All&field_anuncio_funcionamiento_value=All&field_anuncio_eje_value=All&field_anuncio_posicion_value=All&field_anuncio_modalidad_value=All&field_anuncio_velocidades_value=All&field_anuncio_disco_value=All&field_anuncio_diametro_tija_value=All&field_anuncio_largo_value=All&field_anuncio_cierre_value=All&field_anuncio_medida_value=&field_anuncio_ancho_value=&field_anuncio_tipo_value=&field_anuncio_tejido_value=&field_anuncio_capacidad_value=&field_anuncio_potencia_value=&field_bicicleta_marca_value=&field_bicicleta_modelo_value=&field_precio_value_1=%%MIN%%&field_precio_value_2=%%MAX%%&field_anuncio_provincia_value=Madrid&sort_bef_combine=field_fecha_anuncio_value+DESC"
-  - "http://www.merkabici.es/anuncios-madrid/bicis-urbanas/?q=&st=2&t=1&max_price=%%MAX%%&max_page=60&ord=da"
-  - "http://anunciosmtb.com/c/bicicletas-urbanas-segunda-mano/903abe909299ac652e671bad929a46c7"
-  - "http://www.bicicleta.es/clasificados/bicicletas-segunda-mano?sng=1&or=fecha+DESC&tp=&pv=28&pr=500"
+  - "http://www.vibbo.com/bicicletas-paseo-de-segunda-mano-madrid-particulares/?ca=28_s&sort_by=1&od=1"
+  - "http://www.milanuncios.com/bicicletas-paseo-ciudad-de-segunda-mano-en-madrid/?demanda=n&vendedor=part&cerca=s"
+  - "http://www.ebay.es/sch/Bicicletas-/177831/i.html?_sadis=50&_fspt=1&_mPrRngCbx=1&_stpos=28005&_from=R40&LH_PrefLoc=99&_dcat=177831&rt=nc&LH_ItemCondition=3000&_trksid=p2045573.m1684"
+  - "https://es.wallapop.com/rest/items?catIds=12579&dist=0&markAsIds=&publishDate=any&verticalId=&order=creationDate-des"

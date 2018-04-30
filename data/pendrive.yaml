@@ -1,0 +1,19 @@
+title: "Pendrive de segunda mano en Madrid"
+out: "pendrive.html"
+search: ["memoria usb", "pendrive"]
+find: "\\b(memoria usb|pen\\s*drive)\\b"
+min_price: 1
+max_price: 10
+lat: 40.416775
+lng: -3.703790
+km: 50
+exclude: 
+  - ".*\\b(SmartMedia|RAM|cable cargador|apadtador|localizador|Reproductor MP3)\\b.*"
+  - "^(Funda|Bater[ií]a|Marco|c[aá]mara|Placa base|Despiece|Lector|Altavoz|GPS|Mp3|pen ?drive|Lector|caja|marcado digital|mobile|ram )s?.*"
+  - ".*(sodimm| ram | ddr[0-9]? |modem|casio|ERICSSON|wifi|mp3 player|nokia|HUAWEI|router|BLACKBERRY|Reproductor Bluray).*"
+urls:
+  - "https://www.milanuncios.com/componentes-de-segunda-mano-en-madrid/?demanda=n&vendedor=part&cerca=s"
+  - "https://www.milanuncios.com/accesorios-perifericos-en-madrid/?vendedor=part&cerca=s"
+  - "https://www.ebay.es/sch/i.html?LH_PrefLoc=99&_fspt=1&LH_ItemCondition=3000&_mPrRngCbx=1&_osacat=51071&_stpos=28005&_from=R40&_trksid=p2045573.m570.l1313.TR0.TRC0.H0.TRS0&_sacat=51071"
+  - "https://es.wallapop.com/rest/items?catIds=12545&publishDate=any"
+  - "https://www.vibbo.com/perifericos-de-segunda-mano-madrid-particulares/p?ca=28_s&fPos=299&fOn=sl1"
