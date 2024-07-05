@@ -1,134 +1,107 @@
-from abc import ABC, abstractmethod
-from urllib.parse import urlparse
-from importlib import import_module
-from urllib.parse import urljoin
 from datetime import datetime
-import bs4
 import re
 
-import requests
-import yaml
 
-from .util import epoch_to_str
-from .portal import build_portal
-from functools import lru_cache
+from .portal import build_portal, Portal
+from functools import cached_property
+from typing import Dict, Any,  Set, Tuple
+from .config import Config
+from .item import Item
+from dataclasses import dataclass
+import logging
 
+logger = logging.getLogger(__name__)
 
 re_space = re.compile(r"[ \t]+")
 
-def str_to_set(s):
+
+def str_to_tuple(s):
     if s is None:
-        return set()
+        return tuple()
     if isinstance(s, str):
         s = re_space.sub(" ", s)
-        s=s.strip()
+        s = s.strip()
         if "\n" in s:
-            return set(s.split("\n"))
-        return {s}
-    return set(s)
+            return tuple(sorted(set(s.split("\n"))))
+        return tuple(sorted(set(s)))
+    return tuple(sorted(set(s)))
 
-def str_to_set_re(yml, key):
-    s = str_to_set(yml.get(key, None))
-    if len(s)==0:
+
+def str_to_tuple_re(yml: Dict[str, Any], key: str):
+    s = str_to_tuple(yml.get(key, None))
+    if len(s) == 0:
         return s
     e = next(iter(s))
-    if isinstance(e,str):
-        s = set(re.compile(re_space.sub("\\s+", r), re.IGNORECASE) for r in s)
+    if isinstance(e, str):
+        s = tuple(sorted(set(re.compile(re_space.sub("\\s+", r), re.IGNORECASE) for r in s)))
         yml[key] = s
     return s
 
+@dataclass(frozen=True)
 class Search():
+    config: Config
 
-    def __init__(self, yml):
-        if isinstance(yml, str):
-            with open(yml, 'r') as f:
-                yml=yaml.load(f)
-        self.yml = yml
-        self.title = yml['title']
-        self.min_price=yml.get('min_price', None)
-        self.max_price = yml.get('max_price', None)
-        self.words = str_to_set(yml.get('search', None))
-        self.out = yml['out']
-        self.km = yml.get('km', None)
-        self.exclude = str_to_set_re(yml, 'exclude')
-        self.find = str_to_set_re(yml, 'find')
-        self.portals = set()
-        self.items = set()
-        self.date = datetime.now()
-        for url in str_to_set(yml['urls']):
-            if len(self.words)>0:
-                for word in self.words:
-                    p = build_portal(url, word=word, **yml)
-                    self.portals.add(p)
-            else:
-                p = build_portal(url, **yml)
-                self.portals.add(p)
+    def __post_init__(self):
+        if isinstance(self.config, str):
+            object.__setattr__(self, 'config',  Config.load(self.config))
 
-    def load(self):
-        self.items = set()
-        self.date = datetime.now()
-        for p in self.portals:
-            p.load()
-            print (p.web)
-            print (p.url)
-            print (str(len(p.items)))
-            self.items = self.items.union(p.items)
-        return self.items
+    @cached_property
+    def portals(self) -> Tuple[Portal]:
+        urls: Set[str] = set()
+        for url in self.config.urls:
+            if len(self.config.search) == 0:
+                urls.add(url)
+                continue
+            for srch in self.config.search:
+                s_url = url.replace("%%SEARCH_STRING%%", srch.replace(" ", "+"))
+                urls.add(s_url)
+        portals: Set[Portal] = set()
+        for url in urls:
+            p = build_portal(url, self.config)
+            portals.add(p)
+        return tuple(sorted(portals))
 
-    def filter_and_sort(self):
-        items = set()
-        for i in self.items:
-            if filter(self, i):
-                items.add(i)
-        self.items = sorted(items, key=lambda i: i.publish if isinstance(i.publish, int) else 0, reverse=True)
-                
-
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def webs(self):
         webs = set()
         for i in self.items:
             webs.add(i.web)
-        return sorted(webs)
+        return tuple(sorted(webs))
+
+    @cached_property
+    def items(self) -> Tuple[Item]:
+        items = set()
+        for p in self.portals:
+            print(p.web)
+            print(p.url)
+            print(len(p.items))
+            for i in p.items:
+                if self.__isOk(i):
+                    items.add(i)
+        return tuple(sorted(items, key=lambda i: (i.price, -i.publish if isinstance(i.publish, int) else 0)))
+
+    def __isOk(self, i: Item):
+        if self.config.km is not None and i.km is not None and i.km > self.config.km:
+            logger.debug(f"{i.km}km > {self.config.km} {i.url}")
+            return False
+        if self.config.exclude_in_title and re_or(self.config.exclude_in_title, i.title):
+            logger.debug(f"exclude_in_title {self.config.exclude} {i.url}")
+            return False
+        if self.config.exclude and re_or(self.config.exclude, i.title, i.description):
+            logger.debug(f"exclude {self.config.exclude} {i.url}")
+            return False
+        if self.config.find_in_title and not re_or(self.config.find_in_title, i.title):
+            logger.debug(f"not find_in_title {self.config.find_in_title} {i.url}")
+            return False
+        if self.config.find and not re_or(self.config.find, i.title, i.description):
+            logger.debug(f"not find {self.config.find} {i.url}")
+            return False
+        return True
 
 
-def filter(search, item):
-    if search.km is not None and item.km is not None and item.km > search.km:
-        return False
-    if re_or(search.exclude, item.title, item.description):
-        return False
-    val = str_to_set_re(search.yml, "exclude_"+item.web)
-    if re_or(val, item.title, item.description):
-        return False
-    val = str_to_set_re(search.yml, "exclude_"+item.web+"_title")
-    if re_or(val, item.title):
-        return False
-    val = str_to_set_re(search.yml, "exclude_"+item.web+"_description")
-    if re_or(val, item.description):
-        return False
-    val = str_to_set_re(search.yml, "find_"+item.web+"_title")
-    if len(val)>0 and not re_or(val, item.title):
-        return False
-    item.extend()
-    if re_or(search.exclude, item.title, item.description):
-        return False
-    val = str_to_set_re(search.yml, "exclude_"+item.web)
-    if re_or(val, item.title, item.description):
-        return False
-    val = str_to_set_re(search.yml, "exclude_"+item.web+"_description")
-    if re_or(val, item.description):
-        return False
-    val = str_to_set_re(search.yml, "find_"+item.web)
-    if len(val)>0 and not re_or(val, item.title, item.description):
-        return False
-    val = str_to_set_re(search.yml, "find_"+item.web+"_description")
-    if len(val)>0 and not re_or(val, item.description):
-        return False
-    return True
-
-def re_or(res, *args):
+def re_or(res: Tuple[re.Pattern], *args: str):
     for s in args:
-        if s is not None and len(s)>0:
+        if s is not None and len(s) > 0:
             for r in res:
                 if r.search(s):
                     return True

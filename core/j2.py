@@ -29,8 +29,8 @@ def print_date(d):
         return d
     return epoch_to_str(d)
 
-class Jnj2():
 
+class Jnj2():
     def __init__(self, origen, destino):
         self.j2_env = Environment(loader=FileSystemLoader(origen), trim_blocks=True)
         self.j2_env.filters['print_str'] = print_str

@@ -1,0 +1,27 @@
+title: 'Xbox'
+out: 'xbox.html'
+search: "xbox series s"
+lat: 40.416775
+lon: -3.703790
+min_price: 70
+max_price: 110
+find: "\\bxbox series s\\b"
+find_in_title: "\\bxbox\\b"
+exclude:
+  - "\\bparar piezas\\b"
+  - "\\bno funciona\\b"
+  - "\\bxbox one\\b"
+exclude_in_title:
+  - "\\bone\\b"
+  - "\\bvolante\\b"
+  - "\\bkinetc\\b"
+  - "\\btarjeta de expansi[oó]n\\b"
+  - "\\bmandos? xbox\\b"
+  - "\\bmandos? consola\\b"
+  - "\\bauriculares\\b"
+  - "\\b(mando|controlador) no disponible\\b"
+urls:
+  - "https://www.milanuncios.com/consolas/?demanda=n&s=%%SEARCH_STRING%%"
+  - "https://es.wallapop.com/app/search?keywords=%%SEARCH_STRING%%"
+  - "https://es.wallapop.com/app/search?category_ids=24200&object_type_ids=10088&keywords=%%SEARCH_STRING%%"
+  

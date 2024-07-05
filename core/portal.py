@@ -1,10 +1,12 @@
-from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from importlib import import_module
-from urllib.parse import urljoin
-from datetime import datetime
 import bs4
 import re
+from .util import get_web
+from dataclasses import dataclass, field
+from functools import cached_property
+from .config import Config
+from core.web import buildSoup
 
 import requests
 
@@ -27,48 +29,57 @@ default_headers = {
 }
 
 
-def get_web(url):
-    dom = urlparse(url).netloc
-    web = dom.split(".")[-2].lower()
-    return web
+@dataclass(frozen=True, eq=True)
+class Portal:
+    url: str = field(hash=True, compare=True)
 
+    @cached_property
+    def web(self):
+        return get_web(self.url)
 
-def build_portal(url, **kwargs):
-    web = get_web(url)
-    mod = import_module("portals."+web)#, package=__name__)
-    mod = getattr(mod, web.title())
-    return mod(url, **kwargs)
+    @cached_property
+    def root(self):
+        uparse = urlparse(self.url)
+        return uparse.scheme + "://" + uparse.netloc
 
+    @cached_property
+    def s(self):
+        s = requests.Session()
+        s.headers = default_headers
+        return s
 
-class Portal(ABC):
-
-    def __init__(self, url, **kwargs):
-        self.url = self.tune_url(url, **kwargs)
-        self.web = get_web(url)
-        uparse = urlparse(url)
-        self.root = uparse.scheme + "://" + uparse.netloc
-        self.s = requests.Session()
-        self.s.headers = default_headers
-        self.items = set()
-
-    @abstractmethod
-    def load(self):
-        pass
-
-    def tune_url(self, url, **kwargs):
+    @staticmethod
+    def tune_url(url, config: Config):
         return url
 
-    def __hash__(self):
-        return hash(self.url)
+    @cached_property
+    def items(self):
+        return tuple()
 
-    def __eq__(self, other):
-        return self.url == other.url
+    def __lt__(self, other):
+        if not isinstance(other, Portal):
+            return NotImplemented
+        return self.url < other.url
+
+    def __le__(self, other):
+        if not isinstance(other, Portal):
+            return NotImplemented
+        return self.url <= other.url
+
+    def __gt__(self, other):
+        if not isinstance(other, Portal):
+            return NotImplemented
+        return self.url > other.url
+
+    def __ge__(self, other):
+        if not isinstance(other, Portal):
+            return NotImplemented
+        return self.url >= other.url
 
 
 class PortalDistilCaptcha(Portal):
-
     def get(self, url, headers=None, cookies=None, tried=0):
-        response = self.s.get(url, headers=headers,cookies=cookies)
+        response = self.s.get(url, headers=headers, cookies=cookies)
         soup = bs4.BeautifulSoup(response.content, "lxml")
         script = get_captcha(soup)
         if script and tried<2:
@@ -79,48 +90,37 @@ class PortalDistilCaptcha(Portal):
                 r = self.s.post(self.root+pid, headers={"Referer": url}, data={"p":""})
                 cookies = r.cookies
             else:
-                print (r.text)
-                print (script)
+                print(r.text)
+                print(script)
             return self.get(url, headers={"Referer": url},cookies=cookies, tried=tried+1)
         else:
             body_txt = soup.find("body").get_text().strip()
             h1_txt = soup.find("h1").get_text().strip() if soup.find("h1") else None
             if h1_txt and h1_txt == body_txt:
-                print (h1_txt)
-        return soup
+                print(h1_txt)
+        return buildSoup(url, soup)
 
-class Item():
 
-    def __init__(self, url, web=None, title=None, image=None, images=None, description=None, price=0, publish=None, portal=None, km=None):
-        self.url = url
-        self.web = web or get_web(url)
-        self.title = title
-        self.images = {urljoin(url, i) for i in (images or set())}
-        self.image = urljoin(url, image) if image else None
-        self.price = price
-        self.description = description
-        self.publish = publish
-        self.portal = portal
-        self.km = km
-
-    def __hash__(self):
-        return hash(self.url)
-
-    def __eq__(self, other):
-        return self.url == other.url
-
-    def extend(self):
-        pass
-
-def get_captcha(soup):
-    script = soup.find("script", attrs={"src":re_js})
+def get_captcha(soup: bs4.Tag):
+    script = soup.find("script", attrs={"src": re_js})
     if not script:
         return None
     script = script.attrs["src"]
-    if soup.find("meta", attrs={"http-equiv":"refresh"}):
+    if soup.find("meta", attrs={"http-equiv": "refresh"}):
         return script
     if soup.find("div", attrs={"id": "distilCaptchaForm"}):
         return script
     if "#distilCaptchaForm" in str(soup):
         return script
     return None
+
+
+def build_portal(url, config: Config) -> Portal:
+    web = get_web(url)
+    mod = import_module("portals."+web)
+    cls = getattr(mod, web.title())
+    if not issubclass(cls, Portal):
+        raise ValueError("Portal "+web+" desconocido")
+    url = cls.tune_url(url, config)
+    obj = cls(url)
+    return obj

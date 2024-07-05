@@ -1,53 +1,85 @@
 import re
-from urllib.parse import urlparse
+import requests
 
-import bs4
+from core.item import Item
+from core.portal import Portal
+from core.util import clean_description, clean_price, time_to_epoch
+from core.config import Config
+from requests.exceptions import JSONDecodeError
+from typing import Set
+from functools import cached_property
+import logging
+import json
+import time
+from core.web import FFWire
 
-from core.portal import Item, Portal, PortalDistilCaptcha
-from core.util import clean_description, no_number, clean_price, time_to_epoch
+logger = logging.getLogger(__name__)
+
 
 re_date = re.compile(r'"create_date"\s*:\s*"([^"]+)"\s*,\s*"publish_date"\s*:\s*"([^"]+)"')
 
-class Milanuncios(PortalDistilCaptcha):
 
-    def load(self):
-        r = self.get(self.url)
-        for ad in r.select('div.aditem'):
-            a = ad.select("a.aditem-detail-title")[0]
-            i = ad.select('img.ef')
+def get_item(_id):
+    r = requests.post("https://www.milanuncios.com/api/v2/vip/anuncio.php?id="+str(id), headers={"mav": "3"})
+    try:
+        return r.json()
+    except JSONDecodeError:
+        pass
+    return None
 
-            item = MilanunciosItem(
-                url=self.root + a.attrs.get('href'),
+
+class Milanuncios(Portal):
+
+    def __find_json(self):
+        for i in range(2):
+            time.sleep(i*2)
+            with FFWire() as f:
+                for y in range(2):
+                    time.sleep(y*2)
+                    f.get(self.url)
+                    time.sleep(2)
+                    f.get_soup()
+                    for s in f.get_soup().select("body script"):
+                        txt = s.get_text().strip()
+                        if not txt.startswith("window.__INITIAL_PROPS__ = JSON.parse("):
+                            continue
+                        obj = txt.split("(", 1)[-1].rsplit(")", 1)[0]
+                        while isinstance(obj, str):
+                            obj = json.loads(obj)
+                        return obj
+
+    @cached_property
+    def items(self):
+        js = self.__find_json()
+        if js is None:
+            return tuple()
+        items: Set[Item] = set()
+        for ad in js['adListPagination']['adList']['ads']:
+            item = Item(
+                url=self.root + ad['url'],
                 web=self.web,
-                title=a.get_text().strip(),
-                description=clean_description(ad.select('div.tx')),
-                price=clean_price(ad.select('div.aditem-price')),
-                image=i[0].get('src').strip() if len(i) > 0 else None,
-                publish=ad.select("div.x6")[0].get_text().strip(),
-                portal=self
+                title=ad['title'],
+                description=ad['description'],
+                price=ad['price']['cashPrice'],
+                images=ad['images'],
+                publish=time_to_epoch(ad['publishDate']),
             )
-            self.items.add(item)
+            items.add(item)
+        logger.debug(str(len(items))+" items")
+        return tuple(sorted(items))
 
-
-    def tune_url(self, url, word=None, min_price=None, max_price=None, **kwargs):
-        if word is not None:
-            url = url.replace("/?", "/" + word.replace(" ","-")+".htm?")
-        if min_price is not None and "&desde=" not in url:
-            url = url + "&desde="+str(min_price)
-        if max_price is not None and "&hasta=" not in url:
-            url = url + "&hasta="+str(max_price)
+    @staticmethod
+    def tune_url(url: str, config: Config):
+        prm = []
+        if config.min_price not in (None, 0) and "&desde=" not in url:
+            prm.append("desde="+str(config.min_price))
+        if config.max_price is not None and "&hasta=" not in url:
+            prm.append("hasta="+str(config.max_price))
+        if prm:
+            url = url.rstrip("?&")
+            prm = "&".join(prm)
+            if "?" in url:
+                url = url + "&" + prm
+            else:
+                url = url + "?" + prm
         return url
-
-class MilanunciosItem(Item):
-
-    def extend(self):
-        soup = self.portal.get(self.url)
-        m = re_date.search(str(soup))
-        if m:
-            d1 = time_to_epoch(m.group(1))
-            d2 = time_to_epoch(m.group(2))
-            self.publish = d1 if d1 < d2 else d2
-        if not self.image:
-            img = soup.find("link", attrs={"rel":'image_src'})
-            if img is not None:
-                self.image = img.attrs['href']

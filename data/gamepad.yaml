@@ -1,0 +1,35 @@
+title: 'GamePad'
+out: 'gamepad.html'
+search:
+  - "gamepad xbox series"
+  - "mando xbox series"
+  - "controlador xbox series"
+lat: 40.416775
+lon: -3.703790
+min_price: 15
+max_price: 25
+find:
+  - "\\bseries\\b"
+find_in_title: 
+  - "\\bmando\\b"
+  - "\\bgamepad\\b"
+  - "\\bcontrolador\\b"
+exclude:
+  - "\\b(parar piezas|no funciona|dislocado|hay que apretarlo un poco más fuerte|Tiene un error en el botón|lloistic desgastados|atascado|el [uú]nico problema|facilmente arreglable|solo tiene la pega)\\b"
+  - "\\bxbox one\\b"
+  - "\\b(con|por) cable\\b"
+  - "\\bmando a distancia\\b"
+  - "\\b(raptor|GameSir|powera|PlayStation|joycons|power a|PDP|Logitech|Strikepack|Turtle Beach Recon|gamecube|Thrusmaster|360|Pro ?Fusion|Nacon)\\b"
+  - "[\\.\\-]\\s+Tiene drift\\b"
+exclude_in_title:
+  - "\\b(reparacion|soportes?|convertidor|carcasas?|funda)\\b"
+  - "\\belite\\b"
+  - "\\b(mando (play|ps)\\d+)\\b"
+  - "\\b(con fallo)\\b"
+  - "\\bbaterias.+PDPGAMES\\b"
+urls:
+  - "https://www.milanuncios.com/consolas/?demanda=n&s=%%SEARCH_STRING%%"
+  - "https://es.wallapop.com/app/search?keywords=%%SEARCH_STRING%%"
+  - "https://es.wallapop.com/app/search?category_ids=24200&object_type_ids=10088&keywords=%%SEARCH_STRING%%"
+  - "https://es.wallapop.com/app/search?category_ids=24200&object_type_ids=10092&keywords=%%SEARCH_STRING%%"
+  
