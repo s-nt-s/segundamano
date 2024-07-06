@@ -7,7 +7,8 @@ import re
 re_lowercase = re.compile(r".*[a-z].*")
 re_space = re.compile(r"[ \t]+")
 
-def print_str(s):
+
+def print_str(s: str):
     if not s:
         return ''
     if not re_lowercase.match(s):
@@ -16,8 +17,8 @@ def print_str(s):
     return s
 
 
-def print_flt(s):
-    if s:
+def print_flt(s: float):
+    if s is not None:
         return str(s).replace(".0", "")
     return ''
 
@@ -36,6 +37,7 @@ class Jnj2():
         self.j2_env.filters['print_str'] = print_str
         self.j2_env.filters['print_flt'] = print_flt
         self.j2_env.filters['print_date'] = print_date
+        self.j2_env.filters['round'] = lambda x: int(round(x))
         self.destino = destino
 
     def save(self, template, destino=None, parse=None, **kwargs):

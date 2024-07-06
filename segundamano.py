@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 j2 = Jnj2("templates/", "out/")
 
-s = Search(sys.argv[1])
-list(s.items)
-j2.save("listado.html", s.config.out, data=s, now=datetime.now())
+for yml in sys.argv[1:]:
+    s = Search(yml)
+    list(s.items)
+    j2.save("listado.html", s.config.out, data=s, now=datetime.now())

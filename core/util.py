@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 import pytz as tz
+import bs4
 
 tz_madrid = tz.timezone("Europe/Madrid")
 
@@ -50,6 +51,7 @@ def epoch_to_str(epoch):
     dt = datetime.utcfromtimestamp(epoch/1000)
     return dt.strftime('%Y-%m-%d %H:%M')
 
+
 def clean_description(_s):
     if len(_s) == 0:
         return ''
@@ -59,11 +61,13 @@ def clean_description(_s):
     return s.strip()
 
 
-def clean_price(_s):
-    if len(_s) == 0:
-        return ''
-    s = _s[0].get_text()
-    s = no_number.sub("", s)
+def clean_price(_s: bs4.Tag):
+    if _s is None:
+        return None
+    s = _s.get_text()
+    s = no_number.sub("", s).strip()
+    if len(s) == 0:
+        return None
     s = s.replace(".", "")
     s = s.replace(",", ".")
     return float(s)

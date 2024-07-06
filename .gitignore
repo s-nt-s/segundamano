@@ -2,6 +2,7 @@
 *.html
 *.sqlite3
 *.pyc
+*.json
 
 myenv
 out/*

@@ -77,7 +77,7 @@ def iterhref(soup: BeautifulSoup):
 
 
 def buildSoup(root: str, soup: Union[str, BeautifulSoup], parser="lxml"):
-    if isinstance(soup, str):
+    if not isinstance(soup, BeautifulSoup):
         soup = BeautifulSoup(soup, parser)
     for n, attr, val in iterhref(soup):
         val = urljoin(root, val)

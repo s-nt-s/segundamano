@@ -11,6 +11,8 @@ exclude:
   - "\\bparar piezas\\b"
   - "\\bno funciona\\b"
   - "\\bxbox one\\b"
+  - "\\b(mando|controlador) no disponible\\b"
+  - "\\b(solo incluyo la consola|sin controlador)\\b"
 exclude_in_title:
   - "\\bone\\b"
   - "\\bvolante\\b"
@@ -19,9 +21,9 @@ exclude_in_title:
   - "\\bmandos? xbox\\b"
   - "\\bmandos? consola\\b"
   - "\\bauriculares\\b"
-  - "\\b(mando|controlador) no disponible\\b"
+  - "\\bsin mando\\b"
 urls:
   - "https://www.milanuncios.com/consolas/?demanda=n&s=%%SEARCH_STRING%%"
   - "https://es.wallapop.com/app/search?keywords=%%SEARCH_STRING%%"
   - "https://es.wallapop.com/app/search?category_ids=24200&object_type_ids=10088&keywords=%%SEARCH_STRING%%"
-  
+  - "https://www.ebay.es/sch/1249/i.html?_fsrp=1&_from=R40&_sacat=1249&LH_ItemCondition=3%7C4%7C10&_stpos=28012&_fspt=1&rt=nc&LH_PrefLoc=1&_nkw=%%SEARCH_STRING%%"

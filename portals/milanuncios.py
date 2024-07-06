@@ -3,7 +3,7 @@ import requests
 
 from core.item import Item
 from core.portal import Portal
-from core.util import clean_description, clean_price, time_to_epoch
+from core.util import time_to_epoch
 from core.config import Config
 from requests.exceptions import JSONDecodeError
 from typing import Set
@@ -12,6 +12,7 @@ import logging
 import json
 import time
 from core.web import FFWire
+from core.cache import HashCache
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +31,14 @@ def get_item(_id):
 
 class Milanuncios(Portal):
 
-    def __find_json(self):
+    @HashCache("data/milanuncios/{}.json")
+    def __find_json(self, url: str):
         for i in range(2):
             time.sleep(i*2)
             with FFWire() as f:
                 for y in range(2):
                     time.sleep(y*2)
-                    f.get(self.url)
+                    f.get(url)
                     time.sleep(2)
                     f.get_soup()
                     for s in f.get_soup().select("body script"):
@@ -50,7 +52,7 @@ class Milanuncios(Portal):
 
     @cached_property
     def items(self):
-        js = self.__find_json()
+        js = self.__find_json(self.url)
         if js is None:
             return tuple()
         items: Set[Item] = set()
