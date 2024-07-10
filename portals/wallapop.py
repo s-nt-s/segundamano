@@ -14,7 +14,7 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
-URL_API = "api.wallapop.com/api/v3/general/search"
+URL_API = "api.wallapop.com/api/v3/"
 
 
 class Wallapop(Portal):
@@ -46,6 +46,9 @@ class Wallapop(Portal):
         url = self.__find_api_url(self.url)
         search_objects = self.__get_search_objects(url)
         for i in search_objects:
+            f = i['flags']
+            if True in (f['reserved'], f['sold']):
+                continue
             item = Item(
                 url=item_url + i["web_slug"],
                 web=self.web,

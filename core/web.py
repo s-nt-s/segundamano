@@ -2,6 +2,7 @@ import os
 import re
 import time
 from urllib.parse import parse_qsl, urljoin, urlsplit
+import chardet
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -27,7 +28,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 import logging
-from typing import Union, List, Union
+from typing import List, Union, Dict
+import gzip
+from io import BytesIO
 import json
 from json.decoder import JSONDecodeError
 
@@ -491,7 +494,7 @@ class FFWire(Driver):
         return self.driver.requests
 
     def iter_request(self, path=None, **kargv):
-        for ord, request in enumerate(self.requests):
+        for _, request in enumerate(self.requests):
             if request.response and (path is None or path in request.path):
                 yield request
 
@@ -501,14 +504,58 @@ class FFWire(Driver):
 
     def iter_json(self, *args, **kargv):
         for r in self.iter_request(*args, **kargv):
-            body = r.response.body
-            if body is not None:
-                try:
-                    body = body.decode('utf-8')
-                except UnicodeDecodeError:
-                    continue
-                try:
-                    obj = json.loads(body)
-                    yield r, obj
-                except JSONDecodeError:
-                    pass
+            bodies = self.__decode_response_body(r)
+            if bodies is None:
+                continue
+            obj = None
+            for enc, body in bodies.items():
+                if obj is None:
+                    try:
+                        obj = json.loads(body)
+                        yield r, obj
+                    except JSONDecodeError:
+                        pass
+            if obj is None:
+                logging.warn(f"{r.path} no se pudo decodificar a json {bodies}")
+
+    def __decode_response_body(self, r: wirerequests) -> Dict[str, str]:
+        body: bytes = r.response.body
+        if body is None:
+            return None
+
+        encoding = []
+
+        def __add(*args: str):
+            for e in args:
+                if e is not None and e not in encoding:
+                    encoding.append(e)
+
+        ct = r.response.headers.get('Content-Type')
+        if ct:
+            m = re.search(r'charset=([\w-]+)', ct)
+            if m:
+                __add(m.group(1))
+
+        # ce = r.response.headers.get('Content-Encoding', '')
+        # if 'gzip' in ce:
+        try:
+            buf = BytesIO(body)
+            with gzip.GzipFile(fileobj=buf) as f:
+                body = f.read()
+        except gzip.BadGzipFile:
+            pass
+
+        __add(chardet.detect(body)['encoding'])
+        __add('utf-8', 'iso-8859-1', 'windows-1252')
+
+        bodies = {}
+        errors = []
+        for enc in encoding:
+            try:
+                text = body.decode(enc)
+                bodies[enc] = text
+            except (UnicodeDecodeError, TypeError) as e:
+                errors.append(e)
+        if bodies:
+            return bodies
+        logging.warn(f"{r.path} no se pudo decodificar {tuple(encoding)}: {tuple(map(str, errors))}")

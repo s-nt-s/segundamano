@@ -22,6 +22,7 @@ exclude_in_title:
   - "\\bmandos? consola\\b"
   - "\\bauriculares\\b"
   - "\\bsin mando\\b"
+  - "\\b(lo único que no pongo a la venta es el mando)\\b"
 urls:
   - "https://www.milanuncios.com/consolas/?demanda=n&s=%%SEARCH_STRING%%"
   - "https://es.wallapop.com/app/search?keywords=%%SEARCH_STRING%%"

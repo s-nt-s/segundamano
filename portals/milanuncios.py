@@ -62,7 +62,7 @@ class Milanuncios(Portal):
                 web=self.web,
                 title=ad['title'],
                 description=ad['description'],
-                price=ad['price']['cashPrice'],
+                price=ad['price']['cashPrice']['value'],
                 images=ad['images'],
                 publish=time_to_epoch(ad['publishDate']),
             )
